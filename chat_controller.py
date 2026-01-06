@@ -32,7 +32,7 @@ def build_context(df_rules, df_hana):
         context += "A continuación se muestra una muestra de los datos reales (máximo 50 filas) para su análisis:\n\n"
         # Con esta linea no limito el numero de filas
         # context += df_hana.to_string(index=False)
-        context += df_hana.head(50).to_string(index=False)
+        context += df_hana.head(10).to_string(index=False)
         context += "\n\n(Obs: Se incluyen solo las primeras 50 filas para no exceder el límite de contexto. Usa estos datos para inferir patrones.)\n\n"
     else:
         context += "=== DATOS DE HANA ===\nNo se cargaron datos desde HANA.\n\n"
