@@ -1,0 +1,18 @@
+# Ignorar directorios de caché y compilación
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Ignorar entornos virtuales
+venv/
+env/
+.venv/
+
+# Ignorar archivos de entorno y credenciales
+.env
+.env.*
+
+# Ignorar archivos de IDE y sistema
+.vscode/
+*.DS_Store

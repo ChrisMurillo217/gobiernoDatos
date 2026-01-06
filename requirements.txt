@@ -1,0 +1,6 @@
+pandas
+openpyxl
+hdbcli
+python-dotenv
+ollama
+tabulate
