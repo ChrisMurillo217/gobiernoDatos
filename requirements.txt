@@ -4,3 +4,5 @@ hdbcli
 python-dotenv
 ollama
 tabulate
+pytest
+PyYAML

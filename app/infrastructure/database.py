@@ -1,5 +1,7 @@
 from hdbcli import dbapi
-import config
+from app.config import settings as config
+
+import pandas as pd
 
 def get_hana_connection():
     """
@@ -46,3 +48,26 @@ def fetch_data_from_view(view_name):
     finally:
         cursor.close()
         conn.close()
+
+def fetch_data_in_chunks(view_name, chunk_size=50000):
+    """
+    Recupera datos de la vista usando pandas en chunks para eficiencia de memoria.
+    Retorna un iterador de DataFrames.
+    """
+    conn = get_hana_connection()
+    try:
+        query = f"SELECT * FROM {view_name}"
+        print(f"[DB] Iniciando lectura por chunks de '{view_name}' (Tam: {chunk_size})...")
+        
+        # read_sql retorna un generador si chunksize está definido
+        chunks = pd.read_sql(query, conn, chunksize=chunk_size)
+        
+        for chunk in chunks:
+            yield chunk
+            
+    except Exception as e:
+        print(f"[DB Error] Fallo leyendo chunks: {e}")
+        raise
+    finally:
+        conn.close()
+        print("[DB] Conexión cerrada.")

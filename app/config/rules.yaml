@@ -1,0 +1,39 @@
+# Reglas de Negocio Externalizadas
+# Permite modificar umbrales y validaciones sin cambiar código Python.
+
+rules:
+  - field: "LeadTime"
+    type: "range"
+    min: 1
+    max: 20
+    description: "Debe estar entre 1 y 20"
+    severity: "critical"
+
+  - field: "ToleranDay"
+    type: "range"
+    min: 0
+    max: 24
+    description: "Debe estar entre 0 y 24"
+    severity: "warning"
+
+  - field: "IWeight1"
+    type: "range"
+    min: 0
+    max: 1000
+    description: "Entre 0 y 1000 (inclusive)"
+    severity: "critical"
+
+  - field: "ItemClass"
+    type: "value"
+    equal_to: 2
+    description: "Debe ser 2"
+
+  - field: "MngMethod"
+    type: "value"
+    equal_to: "A"
+    description: "Debe ser 'A'"
+
+  - field: "PlaningSys"
+    type: "value"
+    equal_to: "M"
+    description: "Debe ser 'M'"

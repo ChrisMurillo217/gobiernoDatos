@@ -1,5 +1,5 @@
 import pandas as pd
-from config import EXCEL_FILE_PATH, EXCEL_SHEET_NAME
+from app.config.settings import EXCEL_FILE_PATH, EXCEL_SHEET_NAME
 import os
 
 def load_excel_data():
