@@ -1,6 +1,6 @@
 from hdbcli import dbapi
 from app.config import settings as config
-
+# rama view-test
 import pandas as pd
 
 def get_hana_connection():
