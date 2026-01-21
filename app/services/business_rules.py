@@ -340,16 +340,17 @@ def check_u_empa_espesor_range(df):
 def check_u_empa_ancho_range(df):
     # Calidad: PTLAMI -> 8.4-120, PTMANG -> 5-58
     code = df['ItemCode'].astype(str)
-    val = df['U_EMPA_ANCHO']
+    val = pd.to_numeric(df['U_EMPA_ANCHO'], errors='coerce')
+    
     is_ptlami = code.str.contains('PTLAMI', na=False)
     is_ptmang = code.str.contains('PTMANG', na=False)
-    valid_lami = (val >= 8.4) & (val <= 120)
-    valid_mang = (val >= 5) & (val <= 58)
+    
+    valid_lami = val.between(8.4, 120)
+    valid_mang = val.between(5, 58)
+    
     # Lógica: Si Lami -> valida Lami, Sino Si Mang -> valida Mang, Sino -> True
-    res = pd.Series(True, index=df.index)
-    res[is_ptlami] = valid_lami[is_ptlami]
-    res[is_ptmang] = valid_mang[is_ptmang]
-    return res
+    # Usamos np.where anidado para evitar asignacion parcial que causa warnings
+    return np.where(is_ptlami, valid_lami, np.where(is_ptmang, valid_mang, True))
 
 def check_u_empa_caracteristica_tipo(df):
     # Calidad: ESPECIFICO vs GENERICO basado en Cliente en Nombre

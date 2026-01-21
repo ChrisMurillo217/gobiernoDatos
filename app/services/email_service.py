@@ -24,7 +24,7 @@ class EmailService:
         if failed_data.empty:
             print("[Email] No hay datos erróneos para enviar.")
             return
-        subject = f"{subject_prefix} Reporte de Incidencias - {datetime.today().strftime('%Y-%m-%d')}"
+        subject = f"{subject_prefix} Reporte de Incidencias - {datetime.today().strftime('%d-%m-%Y')}"
         body = f"""
         <html>
         <body>
@@ -37,7 +37,7 @@ class EmailService:
         </html>
         """
         # Crear archivo temporal
-        temp_filename = f"incidencias_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+        temp_filename = f"incidencias_{datetime.now().strftime('%d%m%Y')}.xlsx"
         failed_data.to_excel(temp_filename, index=False)
         try:
             msg = MIMEMultipart()
