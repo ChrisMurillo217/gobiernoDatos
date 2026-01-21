@@ -137,6 +137,8 @@ def process_batch(df_chunk, batch_index):
     from app.services.quality_inspector import run_quality_check
     from app.services.business_rules import RULE_DESCRIPTIONS
     from app.services.cleaner import run_cleaning
+    from app.services.value_meanings import get_value_meaning
+    from app.services.field_mappings import get_field_common_name
     
     print(f"[Core] Procesando Lote #{batch_index} ({len(df_chunk)} registros)...")
     
@@ -198,9 +200,9 @@ def process_batch(df_chunk, batch_index):
                     batch_report_rows.append({
                         "ItemCode": row_raw.get('ItemCode'),
                         "ItemName": row_raw.get('ItemName'),
-                        "Nombre del campo evaluado": col,
-                        "Valor actual": current_val,
-                        "Valor sugerido": suggested_val,
+                        "Nombre del campo evaluado": get_field_common_name(col),
+                        "Valor actual": get_value_meaning(col, current_val),
+                        "Valor sugerido": get_value_meaning(col, suggested_val),
                         "Detalle del error": error_msg,
                         "Regla no cumplida": RULE_DESCRIPTIONS.get(col, "Regla no cumplida")
                     })
