@@ -418,13 +418,49 @@ def check_item_name_complex(df):
     }
     materials = ['MIX', 'PEAD', 'PET', 'PC', 'PEBD', 'POLIOLEFINA', 'BOPP', 'CAST', 'PP']
     mat_pat = '|'.join(materials)
-    valid_struct = pd.Series(True, index=df.index) # Por defecto true para los que no coinciden con prefijos conocidos
-    # Asumiremos estricto para los prefijos conocidos
-    # La regla dice "ItemName ... debe seguir la estructura siguiente". Implica para todos.
-    # Pero primero validemos cuales aplican. Iteramos el mapa.
-    # Estrategia: Inicializar en False solo para los que tienen prefijo PT?
-    # O validar positivo si cumple alguna regla.
-    # Vamos a iterar. Si code empieza con key, 'name' DEBE coincidir con value + material.
+    
+    # Expresiones regulares estrictas
+    # ENVASE: ENVASE [Mat] [Vol] [Unit] [Color] [Client?] [Weight] [Unit] [Mix?] [Neck?]
+    # Validacion numerica acepta . o ,
+    float_num = r'\d+(?:[.,]\d+)?'
+    
+    strict_patterns = {
+        # ENVASE(Tipo) PET(MP) 5 LT(Cap) CRISTAL(Color) VOLCANIC(Client) 84 g(Weight) R(Mix) 48 mm(Neck)
+        # Regex: ^ENVASE (MAT) FLOAT (LT|ML...) COLOR (CLIENT?) FLOAT (g|GR|G)( R)?( FLOAT mm)?
+        'ENVASE': (
+            r'^ENVASE (' + mat_pat + r') ' + float_num + r' '
+            r'(?:LT|ML|GL|CM3) [A-Z]+(?: .*)? ' + float_num + r' (?:g|GR|G)(?: R)?(?: ' + float_num + r' mm)?$'
+        ),
+        # PREFORMA(Tipo) PET(MP) 16.5 GR(Weight) AZUL(Color) ORIENTAL(Client) R(Mix) 1881(Neck)
+        # Regex: ^PREFORMA (MAT) FLOAT (g|GR|G) COLOR (CLIENT?) (R )?INT
+        'PREFORMA': (
+            r'^PREFORMA (' + mat_pat + r') ' + float_num + r' (?:g|GR|G) [A-Z]+(?: .*)?(?: R)? \d+$'
+        ),
+        # LAMINA(Tipo) PEBD(MP) 32,7 CM X 95 MC(Dim) TRANSPARENTE(Color) ACEITE...(Client)
+        # Regex: ^LAMINA (MAT) FLOAT CM X FLOAT MC COLOR (CLIENT?)
+        'LAMINA': (
+            r'^LAMINA (' + mat_pat + r') ' + float_num + r' CM X ' + float_num + r' MC [A-Z]+(?: .*)?$'
+        ),
+        # MANGA(Tipo) PEBD(MP) 36 "" X 60 MC(Dim) TRANSPARENTE(Color)
+        # Regex: ^MANGA (MAT) FLOAT "" X FLOAT MC COLOR
+        'MANGA': (
+            r'^MANGA (' + mat_pat + r') ' + float_num + r' "" X ' + float_num + r' MC [A-Z]+$'
+        ),
+        # FUNDA(Tipo) PEBD(MP) 26,5"" X 66"" X 60 MC(Dim) TRANSPARENTE(Color)
+        # Regex: ^FUNDA (MAT) FLOAT "" X FLOAT "" X FLOAT MC COLOR
+        'FUNDA': (
+            r'^FUNDA (' + mat_pat + r') ' + float_num + r'"" X ' + float_num + r'"" X ' + float_num + r' MC [A-Z]+$'
+        ),
+        # TAPA(Tipo) PP(MP) REPOSTERO(Uso) DORADA(Color) 250 - 500 GR(Cap) DANEC(Client)
+        # Regex: ^TAPA (MAT) [A-Z]+ [A-Z]+ FLOAT( - FLOAT)? GR (CLIENT?)
+        'TAPA': (
+            r'^TAPA (' + mat_pat + r') [A-Z]+ [A-Z]+ ' + float_num + r'(?: - ' + float_num + r')? GR(?: .*)?$'
+        )
+    }
+
+    valid_struct = pd.Series(True, index=df.index) 
+
+    # 1. Validacion General por Prefijo (Existente)
     for prefix, allowed_names in prefix_map.items():
         mask_prefix = code.str.startswith(prefix, na=False)
         if not mask_prefix.any():
@@ -433,6 +469,16 @@ def check_item_name_complex(df):
         full_pat = r'^(' + names_pat + r') (' + mat_pat + r').*'
         check_row = name.str.match(full_pat, na=False)
         valid_struct = np.where(mask_prefix, check_row, valid_struct)
+
+    # 2. Validacion Estricta por Tipo (Sobrescribe si aplica)
+    for key, pattern in strict_patterns.items():
+        # Aplica a filas que empiezan con el KEY (ej: 'ENVASE ')
+        # Se asume que el nombre debe empezar con el tipo seguido de espacio
+        mask_type = name.str.startswith(key + ' ', na=False)
+        if mask_type.any():
+            check_strict = name.str.match(pattern, na=False)
+            valid_struct = np.where(mask_type, check_strict, valid_struct)
+            
     return is_unique & not_null & valid_struct
 
 def check_item_type(df):
